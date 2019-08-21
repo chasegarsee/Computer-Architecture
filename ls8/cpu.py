@@ -2,6 +2,11 @@
 
 import sys
 
+HLT = 0b00000001
+LDI = 0b10000010
+PRN = 0b01000111
+MUL = 0b10100010
+
 
 class CPU:
     """Main CPU class."""
@@ -19,19 +24,38 @@ class CPU:
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010,  # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111,  # PRN R0
+        #     0b00000000,
+        #     0b00000001,  # HLT
+        # ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
+
+        if len(sys.argv) != 2:
+            print(f"usage: {sys.argv[0]} filename")
+            sys.exit(1)
+
+        try:
+            with open(sys.argv[1]) as f:
+                for line in f:
+                    num = line.split('#', 1)[0]
+                    if num.strip() == '':
+                        continue
+
+                    # print(num)
+                    self.ram[address] = int(num, 2)  # ,2
+                    address += 1
+
+        except FileNotFoundError:
+            print(f"{sys.argv[0]}: {sys.argv[1]} not found")
+            sys.exit(2)
 
     def ram_read(self, address):
         return self.ram[address]
@@ -45,6 +69,9 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
+            return self.reg[reg_a]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -78,18 +105,23 @@ class CPU:
             operand_b = self.ram[self.PC + 2]
 
             # HLT
-            if IR == 0b00000001:
+            if IR == HLT:
                 running = False
                 self.PC += 1
 
             # PRN
-            elif IR == 0b01000111:
+            elif IR == PRN:
                 self.PC += 2
 
             # LDI
-            elif IR == 0b10000010:
-                self.register[operand_a] = 8
+            elif IR == LDI:
+                self.reg[operand_a] = operand_b
                 self.PC += 3
+
+            elif IR == MUL:
+                self.alu(
+                    'MUL', operand_a, operand_b)
+                self.pc += 3
 
             else:
                 print(f"INSTRUCTION REGISTER NOT FOUND {IR}")
