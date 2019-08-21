@@ -1,5 +1,3 @@
-"""CPU functionality."""
-
 import sys
 
 HLT = 0b00000001
@@ -24,19 +22,19 @@ class CPU:
 
         # For now, we've just hardcoded a program:
 
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010,  # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111,  # PRN R0
-        #     0b00000000,
-        #     0b00000001,  # HLT
-        # ]
+        program = [
+            # From print8.ls8
+            0b10000010,  # LDI R0,8
+            0b00000000,
+            0b00001000,
+            0b01000111,  # PRN R0
+            0b00000000,
+            0b00000001,  # HLT
+        ]
 
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
+        for instruction in program:
+            self.ram[address] = instruction
+            address += 1
 
         if len(sys.argv) != 2:
             print(f"usage: {sys.argv[0]} filename")
@@ -49,8 +47,8 @@ class CPU:
                     if num.strip() == '':
                         continue
 
-                    # print(num)
-                    self.ram[address] = int(num, 2)  # ,2
+                    print(num)
+                    self.ram[address] = int(num, 2)
                     address += 1
 
         except FileNotFoundError:
@@ -67,11 +65,11 @@ class CPU:
         """ALU operations."""
 
         if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+            self.register[reg_a] += self.register[reg_b]
         # elif op == "SUB": etc
         elif op == "MUL":
-            self.reg[reg_a] *= self.reg[reg_b]
-            return self.reg[reg_a]
+            self.register[reg_a] *= self.register[reg_b]
+            return self.register[reg_a]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -115,7 +113,7 @@ class CPU:
 
             # LDI
             elif IR == LDI:
-                self.reg[operand_a] = operand_b
+                self.register[operand_a] = operand_b
                 self.PC += 3
 
             elif IR == MUL:
