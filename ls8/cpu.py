@@ -14,6 +14,11 @@ class CPU:
         self.ram = [0] * 256
         self.register = [0] * 8
         self.PC = 0
+        self.branchtable = {}
+        self.branchtable[HLT] = self.handle_HLT
+        self.branchtable[LDI] = self.handle_LDI
+        self.branchtable[PRN] = self.handle_PRN
+        self.branchtable[MUL] = self.handle_MUL
 
     def load(self):
         """Load a program into memory."""
@@ -22,19 +27,19 @@ class CPU:
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010,  # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111,  # PRN R0
+        #     0b00000000,
+        #     0b00000001,  # HLT
+        # ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
 
         if len(sys.argv) != 2:
             print(f"usage: {sys.argv[0]} filename")
@@ -93,34 +98,59 @@ class CPU:
 
         print()
 
-    def run(self):
-        running = True
-        while running:
+    def handle_HLT(self, a, b):
+        self.running = False
+        self.PC += 1
 
-            # IR === INSTRUCTION REGISTER
-            IR = self.ram[self.PC]
+    def handle_PRN(self, a, b):
+        self.PC += 2
+
+    def handle_LDI(self, a, b):
+        self.register[a] = b
+        self.PC += 3
+
+    def handle_MUL(self, a, b):
+        self.alu("MUL", a, b)
+        self.PC += 3
+
+    def run(self):
+        self.running = True
+        while self.running:
+            ir = self.ram[self.PC]
             operand_a = self.ram[self.PC + 1]
             operand_b = self.ram[self.PC + 2]
+            try:
+                self.branchtable[ir](operand_a, operand_b)
+            except:
 
-            # HLT
-            if IR == HLT:
-                running = False
-                self.PC += 1
+                # def run(self):
+                #     running = True
+                #     while running:
 
-            # PRN
-            elif IR == PRN:
-                self.PC += 2
+                #         # IR === INSTRUCTION REGISTER
+                #         IR = self.ram[self.PC]
+                #         operand_a = self.ram[self.PC + 1]
+                #         operand_b = self.ram[self.PC + 2]
 
-            # LDI
-            elif IR == LDI:
-                self.register[operand_a] = operand_b
-                self.PC += 3
+                #         # HLT
+                #         if IR == HLT:
+                #             running = False
+                #             self.PC += 1
 
-            elif IR == MUL:
-                self.alu(
-                    'MUL', operand_a, operand_b)
-                self.pc += 3
+                #         # PRN
+                #         elif IR == PRN:
+                #             self.PC += 2
 
-            else:
-                print(f"INSTRUCTION REGISTER NOT FOUND {IR}")
+                #         # LDI
+                #         elif IR == LDI:
+                #             self.register[operand_a] = operand_b
+                #             self.PC += 3
+
+                #         elif IR == MUL:
+                #             self.alu(
+                #                 'MUL', operand_a, operand_b)
+                #             self.pc += 3
+
+                #         else:
+                print(f"INSTRUCTION REGISTER NOT FOUND {ir}")
                 sys.exit(1)
